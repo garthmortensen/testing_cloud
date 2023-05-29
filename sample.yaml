@@ -1,19 +1,51 @@
 ---
 Resources:
+
+  MyEC2Instance: 
+    Type: AWS::EC2::Instance
+    Properties:
+      # EC2 Dashboard > "Create Instance" > Find an AMI > add it here
+      ImageId: ami-0715c1897453cabd1 # TODO: replace. this is aws-linux free tier
+      InstanceType: t2.micro # free tier
+      KeyName: having_fun # replace with actual key pair name
+      SecurityGroups: 
+        - !Ref MyEC2SecurityGroup
+
+  MyEC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22' # ssh
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '80' # http
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443' # https
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
+
   MyDB: # define the postgresql rds instance
     Type: AWS::RDS::DBInstance
     Properties:
       Engine: postgres
-      EngineVersion: 13.3
+      EngineVersion: 15.3
       MasterUsername: !Ref 'DBUsername' # reference the 'DBUsername' parameter for the master username
       MasterUserPassword: !Ref 'DBPassword'
       DBInstanceIdentifier: MyPostgreSQLDB # db instance Identifier
       AllocatedStorage: '20' # allocate 20gb to the db
-      DBInstanceClass: db.t2.micro # free tier
-      VPCSecurityGroups:
-        - !Ref MyDBSecurityGroup # reference the 'MyDBSecurityGroup' security group
+      DBInstanceClass: db.t3.micro # free tier
+      VPCSecurityGroups: 
+        - !GetAtt MyDBSecurityGroup.GroupId
       DBSubnetGroupName: !Ref MyDBSubnetGroup # reference the 'MyDBSubnetGroup' subnet group
-  MyDBSecurityGroup: # define the RDS' security group
+
+  # define the RDS' security group
+  # this is like the firewall for the db. it controls inbound/outbound traffic
+  MyDBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security Group for PostgreSQL DB
@@ -22,17 +54,28 @@ Resources:
         FromPort: '5432' # postgresql default port
         ToPort: '5432' # to port = 5432
         CidrIp: 0.0.0.0/0 # allow traffic from any IP address
-  MyDBSubnetGroup: # define the rds instance's subnet group
+
+  # define the rds instance's subnet group. AWS uses VPCs. 
+  # Inside that, we need 1 or more subnets, which support
+  # high availability and failover. in the event of trouble,
+  # we can migrate the db to another subnet
+  MyDBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup 
     Properties: 
       DBSubnetGroupDescription: Subnet group for PostgreSQL DB
-      SubnetIds: 
-        - subnet-abcd1234 # TODO: replace with your actual subnet ID
-        - subnet-abcd5678 # TODO: replace with your actual subnet ID
+      # CloudFormation service does not inherently support auto-selection of available subnets
+      # CloudFormation scripts are declarative. They describe "what" the infrastructure should look like, not "how" to create it. Therefore, auto-selecting is not supported.
+      # go to VPC > subnets
+      SubnetIds: # each contains 4091 ips
+        - subnet-0064055c # TODO: replace with your own subnet ID
+        - subnet-3373101d # TODO: replace with your own subnet ID
+
 Parameters:
+
   DBUsername: # define the parameter for the database admin account username
     Description: db admin account username
     Type: String
+
   DBPassword: # define the parameter for the database admin account password
     Description: db admin account password
     Type: String
