@@ -1,0 +1,39 @@
+---
+Resources:
+  MyDB: # define the postgresql rds instance
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: 13.3
+      MasterUsername: !Ref 'DBUsername' # reference the 'DBUsername' parameter for the master username
+      MasterUserPassword: !Ref 'DBPassword'
+      DBInstanceIdentifier: MyPostgreSQLDB # db instance Identifier
+      AllocatedStorage: '20' # allocate 20gb to the db
+      DBInstanceClass: db.t2.micro # free tier
+      VPCSecurityGroups:
+        - !Ref MyDBSecurityGroup # reference the 'MyDBSecurityGroup' security group
+      DBSubnetGroupName: !Ref MyDBSubnetGroup # reference the 'MyDBSubnetGroup' subnet group
+  MyDBSecurityGroup: # define the RDS' security group
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for PostgreSQL DB
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '5432' # postgresql default port
+        ToPort: '5432' # to port = 5432
+        CidrIp: 0.0.0.0/0 # allow traffic from any IP address
+  MyDBSubnetGroup: # define the rds instance's subnet group
+    Type: AWS::RDS::DBSubnetGroup 
+    Properties: 
+      DBSubnetGroupDescription: Subnet group for PostgreSQL DB
+      SubnetIds: 
+        - subnet-abcd1234 # TODO: replace with your actual subnet ID
+        - subnet-abcd5678 # TODO: replace with your actual subnet ID
+Parameters:
+  DBUsername: # define the parameter for the database admin account username
+    Description: db admin account username
+    Type: String
+  DBPassword: # define the parameter for the database admin account password
+    Description: db admin account password
+    Type: String
+    NoEcho: true # input for this parameter is masked
