@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+
+  MasterUser:
+    Description: The master username for the DB instance
+    Type: String
+    Default: your_master_username
+
+  MasterPassword:
+    Description: The master password for the DB instance
+    Type: String
+    NoEcho: True
+    Default: your_master_password
+
+
+Resources:
+
+  MyEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-026ebd4cfe2c043b2  # REHL 9
+      InstanceType: t2.micro
+      KeyName: having_fun
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet: 
+            - sg-0a0ca8c4bcbbcdda2  # RDS friendly?
+          SubnetId: subnet-0064055c
+
+  MyDB:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      Engine: postgres
+      MasterUsername: !Ref MasterUser
+      MasterUserPassword: !Ref MasterPassword
+      DBInstanceIdentifier: my-db-instance
+      AllocatedStorage: '20'
+      DBInstanceClass: db.t3.micro
+      VPCSecurityGroups: 
+        - sg-0a0ca8c4bcbbcdda2
