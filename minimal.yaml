@@ -54,6 +54,15 @@ Resources:
           yum install -y postgresql
           # yum install -y postgresql12  ...which version?
 
+          # terminal customization
+          yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          yum install -y zsh
+          sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+          sed -i -e 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/g' ~/.zshrc
+          echo 'alias ll="ls -lha"' >> ~/.zshrc
+          chsh -s /bin/zsh
+          reboot  # so zsh is default
+
 
   MyDB:
     Type: 'AWS::RDS::DBInstance'
