@@ -1,0 +1,13 @@
+Resources:
+  MyEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-026ebd4cfe2c043b2
+      InstanceType: t2.micro
+      KeyName: having_fun
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet: 
+            - sg-0a0ca8c4bcbbcdda2
+          SubnetId: subnet-0064055c

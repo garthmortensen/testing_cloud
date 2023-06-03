@@ -33,4 +33,33 @@ http://52.91.17.105:5000/
 create RDS
 postgres
 Connectivity > Connect to an EC2 compute resource
+from ec2, connect to db:
+psql -h database-1.coktl7e0e4k2.us-east-1.rds.amazonaws.com -U postgresssy -d postgres
+
+
+CREATE DATABASE ftp_test;
+\l
+\q
+
+CREATE TABLE ftp_tests (
+    test_id SERIAL PRIMARY KEY,
+    participant_name VARCHAR(100),
+    participant_age INT,
+    participant_weight DECIMAL(5,2),
+    participant_gender CHAR(1),
+    test_date DATE,
+    average_power_output DECIMAL(5,2),
+    maximum_heart_rate INT,
+    test_duration INTERVAL,
+    estimated_ftp DECIMAL(5,2)
+);
+
+INSERT INTO ftp_tests 
+(participant_name, participant_age, participant_weight, participant_gender, test_date, average_power_output, maximum_heart_rate, test_duration, estimated_ftp) 
+VALUES 
+('John Doe', 32, 75.3, 'M', '2023-06-01', 250.00, 180, '00:20:00', 237.5),
+('Jane Smith', 29, 60.5, 'F', '2023-06-02', 200.00, 175, '00:20:00', 190.0),
+('Alex Johnson', 35, 80.7, 'M', '2023-06-03', 275.00, 185, '00:20:00', 261.25);
+
+
 
