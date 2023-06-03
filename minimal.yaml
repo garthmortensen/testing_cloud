@@ -1,6 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+
 Parameters:
+
+  VPCID:
+    Description: VPC ID where the resources will be deployed
+    Type: AWS::EC2::VPC::Id
+
+  SubnetID:
+    Description: Subnet ID where the resources will be deployed
+    Type: AWS::EC2::Subnet::Id
 
   MasterUser:
     Description: The master username for the DB instance
@@ -26,8 +35,25 @@ Resources:
         - AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           GroupSet: 
-            - sg-0a0ca8c4bcbbcdda2  # RDS friendly?
-          SubnetId: subnet-0064055c
+            - !Ref MySecurityGroup
+          SubnetId: !Ref SubnetID
+      UserData:
+        # sudo is not needed here bc run as root
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd  # apache
+          # systemctl enable httpd
+          # systemctl start httpd
+          yum install -y https://centos7.iuscommunity.org/ius-release.rpm
+          yum install -y python38 python38-pip
+          pip3.8 install --upgrade pip
+          pip3.8 install psycopg2
+          pip3.8 install sqlalchemy
+          pip3.8 install flask
+          yum install -y postgresql
+          # yum install -y postgresql12  ...which version?
+
 
   MyDB:
     Type: 'AWS::RDS::DBInstance'
@@ -39,4 +65,37 @@ Resources:
       AllocatedStorage: '20'
       DBInstanceClass: db.t3.micro
       VPCSecurityGroups: 
-        - sg-0a0ca8c4bcbbcdda2
+        - !Ref MySecurityGroup
+
+  MySecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security Group for EC2 and RDS communication
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        # flask
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
+        # postgres
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0  # replace with a more restrictive range
